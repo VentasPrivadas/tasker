@@ -1,0 +1,12 @@
+default:
+  github:
+    baseUrl: 'https://api.github.com/repos/###REPOSITORY###/'
+    user: 'mail@mail.com'
+    pass: 'PASSWORD'
+  asana:
+    apiKey: '###ASANA_API_KEY###'
+    projectId: ###ASANA_PROJECT_ID### 
+dev:
+staging:
+production:
+
