@@ -74,7 +74,6 @@ class Reports
             ]
         );
 
-return $body;
         $msg = [];
         $msg['Source'] = "pablo@ventas-privadas.com";
         $msg['Destination']['ToAddresses'][] = "pablo@ventas-privadas.com";
