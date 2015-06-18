@@ -7,6 +7,8 @@ use Coquelux\Request;
 
 class Tasks
 {
+    const STAGING_TAG_ID = 38379326236997;
+    const PRODUCTION_TAG_ID = 38379326236999;
 
     private $asana;
     private $http;
@@ -32,6 +34,7 @@ class Tasks
                 
                 if (isset($message[2]) && $this->commitHistory->shouldComment($repository, $environment, $message[2])) {
                     $this->asana->commentOnTask((int) $message[2], 'Deployed on ' . $environment);
+                    $this->asana->addTagToTask((int) $message[2], $tagId);
                     $this->commitHistory->setCommit($message[2]);
                 }
             }
