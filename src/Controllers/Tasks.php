@@ -41,23 +41,4 @@ class Tasks
         }
         return new Response();
     }
-
-    public function get()
-    {
-       $options = ['due_on' => 'today','completed' => 'true', 'opt_fields'=> 'name, assignee, archived, created_at, assignee_status, completed, due_on'];
-       $result = json_decode($this->asana->getProjectTasks(
-           Config::get()->asana->projectId, $options), true
-       );
-
-       $released = [];
-       foreach ($result['data'] as $t) {
-           if (empty($t['due_on'])) {
-               continue;
-           }
-           $released[$t['due_on']][] = $t['name'];
-       }
-
-       ksort($released);
-       return json_encode($released);
-    }
 }

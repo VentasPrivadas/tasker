@@ -2,6 +2,7 @@
 use Coquelux\Request;
 use Coquelux\Config;
 use Symfony\Component\HttpFoundation\Response;
+use Aws\Ses\SesClient;
 
 use Doctrine\MongoDB\Connection;
 use Doctrine\ODM\MongoDB\Configuration;
@@ -18,24 +19,23 @@ $loader->add('Documents', BASE_DIR . 'src');
 $app = new Coquelux\Application();
 $app['debug'] = true;
 
-/*
-$connection = new Connection(Config::get()->mongodb->server);
-$config = new Configuration();
-$config->setProxyDir(BASE_DIR . 'src/Models/Proxies');
-$config->setProxyNamespace('Models\Proxies');
-$config->setHydratorDir(BASE_DIR . 'src/Models//Hydrators');
-$config->setHydratorNamespace('Models\Hydrators');
-$config->setDefaultDB('tasker');
+$app->register(new Silex\Provider\TwigServiceProvider(), array(
+    'twig.path' => BASE_DIR . '/src/Views',
+));
 
-Doctrine\Common\Annotations\AnnotationRegistry::registerAutoloadNamespace(
-    'JMS\Serializer\Annotation', '../vendor/jms/serializer/src'
-);
+$app['report'] = $app->share(function () use ($app) {
+    $http = new GuzzleHttp\Client();
+    $github = new Models\Github($http);
+    $asana = new Asana(['apiKey' => Config::get()->asana->apiKey]);
+    $ses = new Aws\Ses\SesClient([
+        'key'    => Config::get()->aws->key,
+        'secret' => Config::get()->aws->secret,
+        'region' => Config::get()->aws->region,
+        'version' => 'latest',
+    ]);
 
-$config->setMetadataDriverImpl(AnnotationDriver::create(BASE_DIR . 'src/Documents'));
-AnnotationDriver::registerAnnotationClasses();
-
-$dm = DocumentManager::create($connection, $config);
-*/
+    return new Controllers\Reports($asana, $github, $app['twig'], $ses);
+});
 
 $app['tasks'] = $app->share(function () use ($app) {
     $http = new GuzzleHttp\Client();
@@ -55,9 +55,9 @@ $app->after(function (Request $request, Response $response) {
     $response->headers->set('Access-Control-Allow-Origin', '*');
     $response->headers->set('Access-Control-Allow-Headers', 'Content-Type');
     $response->headers->set('Access-Control-Allow-Methods', 'GET,PUT,POST,HEAD,DELETE,OPTIONS');
-    if ($response->getStatusCode() != '500') {
-        $response->headers->set('Content-Type', 'application/json; charset=UTF-8');
-    }
+//    if ($response->getStatusCode() != '500') {
+//        $response->headers->set('Content-Type', 'application/json; charset=UTF-8');
+//    }
 });
 
 $app->match("{url}", function($url) use ($app) { return "OK"; })->assert('url', '.*')->method("OPTIONS");
@@ -65,6 +65,6 @@ $app->match("{url}", function($url) use ($app) { return "OK"; })->assert('url', 
 $app->register(new Silex\Provider\ServiceControllerServiceProvider());
 $app->register(new Silex\Provider\ValidatorServiceProvider());
 
-$app->get('/tasks', 'tasks:get');
+$app->get('/projects', 'report:get');
 $app->get('/tasks/deploy', 'tasks:deploy');
 $app->run();
