@@ -827,7 +827,8 @@ body.outlook p {
                             <h3>Released {{today}} </h3>
                             <ul>
                                 {% for task in current %}
-                                <li>{{task.task}} - by {{task.assignee}}</li>
+                                <li>{{task.task}} - by {{task.assignee}} <a	href="https://app.asana.com/0/36306074788595/{{task.id}}">[+]</a></li>
+</li>
                                 {% endfor %}
                             </ul>
                             <br/>
@@ -835,7 +836,7 @@ body.outlook p {
                             <h3>Released above {{above}}</h3>
                             <ul>
                                 {% for task in latest %}
-                                <li>{{task.task}} - by {{task.assignee}}</li>
+                                <li>{{task.task}} - by {{task.assignee}} <a	href="https://app.asana.com/0/36306074788595/{{task.id}}">[+]</a></li>
                                 {% endfor %}
                             </ul>
 
