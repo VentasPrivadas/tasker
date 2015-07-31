@@ -13,6 +13,9 @@ default:
   mongodb:
       server: 'mongodb://domain:port'
       dbName: 'collectionName'
+  mail:
+    source: 'changelog@changelog.com'
+    destination: 'changelog@changelog.com'
 dev:
 staging:
 production:

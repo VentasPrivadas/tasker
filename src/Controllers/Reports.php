@@ -9,8 +9,6 @@ use MongoDate;
 
 class Reports 
 {
-    const STAGING_TAG_ID = 38379326236997;
-    const PRODUCTION_TAG_ID = 38379326236999;
 
     private $assana;
     private $twig;
@@ -67,8 +65,8 @@ class Reports
         $today = $today->format('Y-m-d');
 
         $msg = [];
-        $msg['Source'] = "changelog@ventas-privadas.com";
-        $msg['Destination']['ToAddresses'][] = "changelog@ventas-privadas.com";
+        $msg['Source'] = Config::get()->mail->source;
+        $msg['Destination']['ToAddresses'][] = Config::get()->mail->destination;
 
         $msg['Message']['Subject']['Data'] = "Release $today :: Changelog";
         $msg['Message']['Subject']['Charset'] = "UTF-8";
