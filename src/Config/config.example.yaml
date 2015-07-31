@@ -1,11 +1,18 @@
 default:
   github:
-    baseUrl: 'https://api.github.com/repos/###REPOSITORY###/'
-    user: 'mail@mail.com'
-    pass: 'PASSWORD'
+    baseUrl: 'https://api.github.com/repos/VentasPrivadas/'
+    email: 'mail@dominio.com'
+    pass: 'password'
   asana:
-    apiKey: '###ASANA_API_KEY###'
-    projectId: ###ASANA_PROJECT_ID### 
+    apiKey: 'APIKEY'
+    projectId: PROYECT_ID
+  aws:
+    key: ''
+    secret: ''
+    region: 'us-west-2'
+  mongodb:
+      server: 'mongodb://domain:port'
+      dbName: 'collectionName'
 dev:
 staging:
 production:

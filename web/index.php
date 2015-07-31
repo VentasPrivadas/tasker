@@ -50,29 +50,40 @@ $app['dm'] = function ($app) {
 };
 
 
+$app['assana'] = function ($app) {
+    $client = new Asana(['apiKey' => Config::get()->asana->apiKey]);
+    return new Models\Assana($client);
+};
 
-$app['report'] = $app->share(function () use ($app) {
+$app['github'] = function ($app) {
     $http = new GuzzleHttp\Client();
-    $github = new Models\Github($http);
-    $asana = new Asana(['apiKey' => Config::get()->asana->apiKey]);
-    $ses = new Aws\Ses\SesClient([
-        'key'    => Config::get()->aws->key,
-        'secret' => Config::get()->aws->secret,
+    return new Models\Github($http);
+};
+
+$app['ses'] = function ($app) {
+    return new Aws\Ses\SesClient([
+        'credentials' => [
+            'key'    => Config::get()->aws->key,
+            'secret' => Config::get()->aws->secret,
+        ],
         'region' => Config::get()->aws->region,
         'version' => 'latest',
     ]);
+};
 
+$app['report'] = $app->share(function () use ($app) {
     $tasks = new Models\Resources\Tasks($app['dm']);
 
-    return new Controllers\Reports($asana, $github, $app['twig'], $ses, $tasks);
+    return new Controllers\Reports(
+        $app['assana'], $app['github'], $app['twig'], $app['ses'], $tasks
+    );
 });
 
 $app['tasks'] = $app->share(function () use ($app) {
     $http = new GuzzleHttp\Client();
-    $github = new Models\Github($http);
-    $asana = new Asana(['apiKey' => Config::get()->asana->apiKey]);
+    $assana = new Asana(['apiKey' => Config::get()->asana->apiKey]);
     $commitHistory = new Models\CommitHistory();
-    return new Controllers\Tasks($asana, $github, $commitHistory);
+    return new Controllers\Tasks($assana, $app['github'], $commitHistory);
 });
 
 $app->before(function (Request $request, Coquelux\Application $app) {
@@ -85,9 +96,9 @@ $app->after(function (Request $request, Response $response) {
     $response->headers->set('Access-Control-Allow-Origin', '*');
     $response->headers->set('Access-Control-Allow-Headers', 'Content-Type');
     $response->headers->set('Access-Control-Allow-Methods', 'GET,PUT,POST,HEAD,DELETE,OPTIONS');
-//    if ($response->getStatusCode() != '500') {
+    if ($response->getStatusCode() != '500') {
 //        $response->headers->set('Content-Type', 'application/json; charset=UTF-8');
-//    }
+    }
 });
 
 $app->match("{url}", function($url) use ($app) { return "OK"; })->assert('url', '.*')->method("OPTIONS");
@@ -96,5 +107,6 @@ $app->register(new Silex\Provider\ServiceControllerServiceProvider());
 $app->register(new Silex\Provider\ValidatorServiceProvider());
 
 $app->get('/projects', 'report:get');
+$app->get('/tasks', 'report:getTasks');
 $app->get('/tasks/deploy', 'tasks:deploy');
 $app->run();

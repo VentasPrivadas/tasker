@@ -4,6 +4,7 @@ namespace Models\Resources;
 
 use Coquelux\PHP;
 use Models;
+use MongoDate;
 
 class Tasks
 {
@@ -20,20 +21,15 @@ class Tasks
         $task = $this->get($params['id']);
         if ( ! $task) {
             $task = new Models\Documents\Tasks();
-            $this->persist($task, $params);
         }
+        
+        $this->persist($task, $params);
     }
 
     public function markAsSent($task)
     {
-        $task = $this->get($task['id']);
-        if ( ! $task) {
-            echo "NO LO ENCUENTRA";
-            var_dump($task);
-            exit;
-        }
-        error_log('Trying ... ' . $task->getAssanaId());
-        $task->setSent(); 
+        $task = $this->get($task->getAssanaId());
+        $task->setSent(true); 
         $this->conn->persist($task);
         $this->conn->flush();
     }
@@ -41,10 +37,11 @@ class Tasks
     private function persist($task, $params)
     {
         $task->setAssanaId($params['id']);
-        $task->setTask($params['task']);
-        $task->setAssignee($params['assignee']);
-        $task->setDueDate($params['due_date']);
-        
+        $task->setTask($params['name']);
+        $task->setAssignee($params['user']);
+        $task->setDueDate($params['dueDate']);
+        $task->setCompleted($params['completed'] == 1);
+        $task->setSent(false); 
         $this->conn->persist($task);
         $this->conn->flush();
         return $task;
@@ -52,14 +49,20 @@ class Tasks
 
     public function getUnsent()
     {
+        $today = new MongoDate();
+        $first = new MongoDate(\strtotime('2015-07-28 00:00:00'));
         $query = $this->conn->createQueryBuilder('Models\Documents\Tasks')
-            ->field('sent')->exists(false)
+            ->field('sent')->equals(false)
+            ->field('dueDate')->lte($today)
+            ->field('dueDate')->gte($first)
+            ->field('completed')->equals(true)
             ->sort('dueDate', 'asc');
         return $query->getQuery()->execute();
     }
 
     public function get($id)
     {
+        settype($id, 'string');
         $query = $this->conn
             ->getRepository('Models\Documents\Tasks')
             ->findOneBy(['assanaId' => $id]);

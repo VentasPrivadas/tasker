@@ -15,7 +15,7 @@ class Assana
 
     public function getAllUsers()
     {
-        $usersFromAsana = json_decode($this->asana->getUsers(), true);
+        $usersFromAsana = json_decode($this->assana->getUsers(), true);
         $users = [];
         foreach ($usersFromAsana['data'] as $u) {
             $users[$u['id']] = $u['name'];
@@ -26,12 +26,11 @@ class Assana
     public function getTasks($projectId)
     {
         $options = ['due_on' => 'today','completed' => 'true', 'opt_fields'=> 'name, assignee, archived, created_at, assignee_status, completed, due_on'];
-        $result = json_decode($this->asana->getProjectTasks(
+        $result = json_decode($this->assana->getProjectTasks(
             $projectId, $options), true
         );
 
-        return $results;
-
+        return $result['data'];
     }
 
 }

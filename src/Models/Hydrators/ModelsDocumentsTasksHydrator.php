@@ -43,10 +43,10 @@ class ModelsDocumentsTasksHydrator implements HydratorInterface
             $hydratedData['dueDate'] = $return;
         }
 
-        /** @Field(type="int") */
+        /** @Field(type="string") */
         if (isset($data['assanaId'])) {
             $value = $data['assanaId'];
-            $return = (int) $value;
+            $return = (string) $value;
             $this->class->reflFields['assanaId']->setValue($document, $return);
             $hydratedData['assanaId'] = $return;
         }
@@ -65,6 +65,22 @@ class ModelsDocumentsTasksHydrator implements HydratorInterface
             $return = (string) $value;
             $this->class->reflFields['task']->setValue($document, $return);
             $hydratedData['task'] = $return;
+        }
+
+        /** @Field(type="boolean") */
+        if (isset($data['completed'])) {
+            $value = $data['completed'];
+            $return = (bool) $value;
+            $this->class->reflFields['completed']->setValue($document, $return);
+            $hydratedData['completed'] = $return;
+        }
+
+        /** @Field(type="boolean") */
+        if (isset($data['sent'])) {
+            $value = $data['sent'];
+            $return = (bool) $value;
+            $this->class->reflFields['sent']->setValue($document, $return);
+            $hydratedData['sent'] = $return;
         }
         return $hydratedData;
     }

@@ -12,7 +12,7 @@ class Tasks extends EntityManager
     /** @ODM\Date */
     protected $dueDate;
 
-    /** @ODM\Int */
+    /** @ODM\String */
     protected $assanaId;
 
     /** @ODM\String */
@@ -21,8 +21,9 @@ class Tasks extends EntityManager
     /** @ODM\String */
     protected $task;
 
-    public function setSent()
-    {
-        $this->sent = true;
-    }
+    /** @ODM\Boolean */
+    protected $completed;
+
+    /** @ODM\Boolean */
+    protected $sent;
 }

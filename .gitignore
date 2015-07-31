@@ -2,4 +2,4 @@ src/Config/config.yaml
 vendor
 composer.lock
 build
-./var
+/var

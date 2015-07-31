@@ -5,83 +5,66 @@ namespace Controllers;
 use Coquelux\Config;
 use Coquelux\Response;
 use Coquelux\Request;
+use MongoDate;
 
 class Reports 
 {
     const STAGING_TAG_ID = 38379326236997;
     const PRODUCTION_TAG_ID = 38379326236999;
 
-    private $asana;
-    private $http;
+    private $assana;
     private $twig;
     private $ses;
+    private $task;
+    private $github;
 
-    public function __construct($asana, $github, $twig, $ses, $task)
+    public function __construct($assana, $github, $twig, $ses, $task)
     {
         $this->task = $task;
-        $this->asana = $asana;
+        $this->assana = $assana;
         $this->twig = $twig;
         $this->ses = $ses;
         $this->github = $github;
     }
 
-    public function get()
+    public function getTasks()
     {
-
-        $tasks = $this->assana->getTasks(Config::get()->asana->projectId);
         $users = $this->assana->getAllUsers();
+        $taskAssana = $this->assana->getTasks(Config::get()->asana->projectId);
 
-        $data = [];
-
-        $today = new \DateTime('now');
-        $today = $today->format('Y-m-d');
-        $data['today'][$today] = [];
-
-        $data = ['current' => [], 'latest' => []];
-        foreach ($result['data'] as $t) {
-            $dueDate = new \DateTime($t['due_on']);
-            $dueDate = $dueDate->format('Y-m-d');
-            if (empty($t['due_on'])) {
-                continue;
-            }
-            $list = 'latest';
-            if ($dueDate == $today) {
-                $list = 'current';
-            }
-            $user = isset($users[$t['assignee']['id']]) 
+        foreach ($taskAssana as $t) {
+            $t['dueDate'] = new MongoDate(\strtotime($t['due_on']));
+            $t['user'] = isset($users[$t['assignee']['id']]) 
                 ? $users[$t['assignee']['id']] 
                 : "Not Assigned";
 
-            $task = ['task' => $t['name'], 'assignee' => $user, 'due_date' => $dueDate, 'id' => $t['id'] ];
-            $this->task->save($task);
+            $this->task->save($t);
         }
 
+        return json_encode(['tasks' => count($taskAssana)]);
+    }
+
+    public function get()
+    {
         $tasks = $this->task->getUnsent();
 
+        $response = [];
         foreach ($tasks as $t) {
+            $response[] = $t->toArray();
             $this->task->markAsSent($t);
         }
-        return json_encode([]);
 
-        ksort($data['latest']);
-        $latest = array_keys($data['latest']);
-        $above = array_pop($latest);
-
-
-
-        if (empty($data['latest'])) {
-            $data['current'] = $data['latest'];
-            $data['latest'] = [];
+        if ( ! count($response)) {
+            return json_encode(["error" => "Nothing to do"]);
         }
+
         $body = $this->twig->render(
             'changelog.twig', [
-                'current' => $data['current'][$today], 
-                'latest' => $data['latest'][$above], 
-                'today' => $today, 
-                'above' => $above
+                'current' => $response, 
             ]
         );
-        return json_encode($body);
+        $today = new \DateTime('now');
+        $today = $today->format('Y-m-d');
 
         $msg = [];
         $msg['Source'] = "changelog@ventas-privadas.com";
@@ -98,7 +81,7 @@ class Reports
 
         try{
             $result = $this->ses->sendEmail($msg);
-            return json_encode($result);
+            return json_encode($response);
         } catch (Exception $e) {
             return json_decode($e->getMessage());
         }
