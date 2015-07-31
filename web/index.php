@@ -22,6 +22,34 @@ $app['debug'] = true;
 $app->register(new Silex\Provider\TwigServiceProvider(), array(
     'twig.path' => BASE_DIR . '/src/Views',
 ));
+$app['connection'] = function ($app) {
+    return new Connection(Config::get()->mongodb->server);
+};
+
+$app['configMongo'] = function ($app) {
+    $config = new Configuration();
+    $config->setDefaultDB(Config::get()->mongodb->dbName);
+    $config->setProxyDir(BASE_DIR . 'src/Models/Proxies');
+    $config->setProxyNamespace('Models\Proxies');
+    $config->setHydratorDir(BASE_DIR . 'src/Models//Hydrators');
+    $config->setHydratorNamespace('Models\Hydrators');
+
+    Doctrine\Common\Annotations\AnnotationRegistry::registerAutoloadNamespace(
+        'JMS\Serializer\Annotation',
+        '../vendor/jms/serializer/src'
+    );
+
+    $config->setMetadataDriverImpl(AnnotationDriver::create(BASE_DIR . 'src/Documents'));
+    AnnotationDriver::registerAnnotationClasses();
+
+    return $config;
+};
+
+$app['dm'] = function ($app) {
+    return DocumentManager::create($app['connection'], $app['configMongo']);
+};
+
+
 
 $app['report'] = $app->share(function () use ($app) {
     $http = new GuzzleHttp\Client();
@@ -34,7 +62,9 @@ $app['report'] = $app->share(function () use ($app) {
         'version' => 'latest',
     ]);
 
-    return new Controllers\Reports($asana, $github, $app['twig'], $ses);
+    $tasks = new Models\Resources\Tasks($app['dm']);
+
+    return new Controllers\Reports($asana, $github, $app['twig'], $ses, $tasks);
 });
 
 $app['tasks'] = $app->share(function () use ($app) {

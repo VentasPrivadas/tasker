@@ -12,6 +12,7 @@
         "VentasPrivadas/coquelux-sdk": "master",
         "ajimix/asana-api-php-class": "*",
         "guzzlehttp/guzzle": "5.3.0",
+        "doctrine/mongodb-odm": "1.0.0-BETA11",
         "twig/twig" : "*",
         "aws/aws-sdk-php" : "*"
     },

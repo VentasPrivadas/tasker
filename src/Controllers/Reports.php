@@ -16,8 +16,9 @@ class Reports
     private $twig;
     private $ses;
 
-    public function __construct($asana, $github, $twig, $ses)
+    public function __construct($asana, $github, $twig, $ses, $task)
     {
+        $this->task = $task;
         $this->asana = $asana;
         $this->twig = $twig;
         $this->ses = $ses;
@@ -27,16 +28,8 @@ class Reports
     public function get()
     {
 
-        $options = ['due_on' => 'today','completed' => 'true', 'opt_fields'=> 'name, assignee, archived, created_at, assignee_status, completed, due_on'];
-        $result = json_decode($this->asana->getProjectTasks(
-            Config::get()->asana->projectId, $options), true
-        );
-
-        $usersFromAsana = json_decode($this->asana->getUsers(), true);
-        $users = [];
-        foreach ($usersFromAsana['data'] as $u) {
-            $users[$u['id']] = $u['name'];
-        }
+        $tasks = $this->assana->getTasks(Config::get()->asana->projectId);
+        $users = $this->assana->getAllUsers();
 
         $data = [];
 
@@ -59,12 +52,22 @@ class Reports
                 ? $users[$t['assignee']['id']] 
                 : "Not Assigned";
 
-            $data[$list][$dueDate][] = ['task' => $t['name'], 'assignee' => $user, 'due_date' => $dueDate, 'id' => $t['id'] ];
+            $task = ['task' => $t['name'], 'assignee' => $user, 'due_date' => $dueDate, 'id' => $t['id'] ];
+            $this->task->save($task);
         }
+
+        $tasks = $this->task->getUnsent();
+
+        foreach ($tasks as $t) {
+            $this->task->markAsSent($t);
+        }
+        return json_encode([]);
 
         ksort($data['latest']);
         $latest = array_keys($data['latest']);
         $above = array_pop($latest);
+
+
 
         if (empty($data['latest'])) {
             $data['current'] = $data['latest'];
@@ -78,6 +81,7 @@ class Reports
                 'above' => $above
             ]
         );
+        return json_encode($body);
 
         $msg = [];
         $msg['Source'] = "changelog@ventas-privadas.com";

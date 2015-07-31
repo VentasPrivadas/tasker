@@ -1,0 +1,16 @@
+web:
+    image: coquelux/transporter
+    ports:
+        - "80:80"
+    volumes:
+        - ./:/var/www
+        - ./src/Config/apache/tasker.conf:/etc/apache2/sites-enabled/tasker.conf
+        - ./var/log:/var/log/apache2
+    links:
+        - mongodb:mongo.dev.coquelux.com.br
+        - mongodb:mongo.dev.ventas-privadas.com
+mongodb:
+    image: coquelux/mongodb
+    ports:
+        - "27017:27017"
+
