@@ -50,7 +50,7 @@ class Tasks
     public function getUnsent()
     {
         $today = new MongoDate();
-        $first = new MongoDate(\strtotime('2015-07-28 00:00:00'));
+        $first = new MongoDate(\strtotime('2015-08-01 00:00:00'));
         $query = $this->conn->createQueryBuilder('Models\Documents\Tasks')
             ->field('sent')->equals(false)
             ->field('dueDate')->lte($today)
