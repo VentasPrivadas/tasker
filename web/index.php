@@ -106,7 +106,10 @@ $app->match("{url}", function($url) use ($app) { return "OK"; })->assert('url', 
 $app->register(new Silex\Provider\ServiceControllerServiceProvider());
 $app->register(new Silex\Provider\ValidatorServiceProvider());
 
+list($_, $method, $path) = $argv;
+$request = Request::create($path, $method);
+
 $app->get('/projects', 'report:get');
 $app->get('/tasks', 'report:getTasks');
 $app->get('/tasks/deploy', 'tasks:deploy');
-$app->run();
+$app->run($request);
